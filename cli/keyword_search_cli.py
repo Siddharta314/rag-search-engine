@@ -2,8 +2,7 @@
 
 import argparse
 from load_movies import load_movies
-from text_processing import simple_clean
-
+from text_processing import simple_clean, tokenize_based_word, compare_list_tokens
 
 
 def main() -> None:
@@ -20,7 +19,10 @@ def main() -> None:
             print(f"Searching for: {args.query}")
             movies = load_movies()
             for movie in movies:
-                if simple_clean(args.query) in simple_clean(movie["title"]):
+                search_clean, title_clean = simple_clean(args.query), simple_clean(movie["title"])
+                if compare_list_tokens(
+                    tokenize_based_word(search_clean), tokenize_based_word(title_clean)
+                ):
                     print(movie["id"], movie["title"])
         case _:
             parser.print_help()
