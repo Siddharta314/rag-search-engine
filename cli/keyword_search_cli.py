@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from load_files import load_movies, load_stopwords
-from text_processing import (
-    simple_clean, 
-    tokenize_based_word, 
-    compare_list_tokens,
-    remove_stopwords
-)
+from search_command import search
 
 
 def main() -> None:
@@ -21,19 +15,7 @@ def main() -> None:
 
     match args.command:
         case "search":
-            print(f"Searching for: {args.query}")
-
-            movies = load_movies()
-            stopwords: list[str] = load_stopwords()
-
-            for movie in movies:
-                search_clean = remove_stopwords(simple_clean(args.query), stopwords)
-                title_clean = remove_stopwords(simple_clean(movie["title"]), stopwords)
-                if compare_list_tokens(
-                    tokenize_based_word(search_clean),
-                    tokenize_based_word(title_clean)
-                ):
-                    print(movie["id"], movie["title"])
+            search(args.query)
         case _:
             parser.print_help()
 
