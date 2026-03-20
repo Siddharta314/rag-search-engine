@@ -14,6 +14,15 @@ def tokenize_based_word(text: str) -> list[str]:
 def compare_list_tokens(list1: list[str], list2: list[str]) -> bool:
     set1, set2 = set(list1), set(list2)
     return not set(set1).isdisjoint(set2)
+    # query_tokens = [t.lower() for t in list1 if t.strip()]
+    # title_tokens = [t.lower() for t in list2 if t.strip()]
+
+    # for q_token in query_tokens:
+    #     for t_token in title_tokens:
+    #         if q_token in t_token:
+    #             return True
+
+    # return False
 
 def preprocess(text: str, stopwords: set[str], stemmer: Any) -> list[str]:
     """

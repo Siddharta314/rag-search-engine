@@ -9,6 +9,7 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
+    _ = subparsers.add_parser("build", help="Build the inverted index")
     search_parser.add_argument("query", type=str, help="Search query")
 
     args = parser.parse_args()
@@ -16,6 +17,13 @@ def main() -> None:
     match args.command:
         case "search":
             search(args.query)
+        case "build":
+            from inverted_index import InvertedIndex
+            index = InvertedIndex()
+            index.build()
+            index.save()
+            docs = index.get_document("merida")
+            print(f"First document for token 'merida' = {docs[0]}")
         case _:
             parser.print_help()
 
