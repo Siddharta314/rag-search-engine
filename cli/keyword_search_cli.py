@@ -2,6 +2,8 @@
 
 import argparse
 from search_command import search
+from inverted_index import InvertedIndex
+
 
 
 def main() -> None:
@@ -13,13 +15,16 @@ def main() -> None:
     search_parser.add_argument("query", type=str, help="Search query")
 
     args = parser.parse_args()
+    index = InvertedIndex()
 
     match args.command:
         case "search":
-            search(args.query)
+            try:
+                index.load()
+                search(args.query, index)
+            except FileNotFoundError:
+                print("Index or docmap file not found. Please run 'python keyword_search_cli.py build' first.")
         case "build":
-            from inverted_index import InvertedIndex
-            index = InvertedIndex()
             index.build()
             index.save()
             docs = index.get_document("merida")

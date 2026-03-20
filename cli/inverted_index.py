@@ -1,4 +1,4 @@
-from pickle import dump
+from pickle import dump, load
 from nltk.stem import PorterStemmer
 from load_files import load_stopwords, load_movies
 from text_processing import preprocess
@@ -54,3 +54,16 @@ class InvertedIndex():
         # save docmap
         with open(self.__docmap_file, "wb") as f:
             dump(self.docmap, f)
+
+    def load(self) -> None:
+        # Raise an error if files don't exist
+        import os 
+        if not os.path.exists(self.__index_file) or not os.path.exists(self.__docmap_file):
+            raise FileNotFoundError("Index or docmap file not found")
+        # load index
+        with open(self.__index_file, "rb") as f:
+            self.index = load(f)
+
+        # load docmap
+        with open(self.__docmap_file, "rb") as f:
+            self.docmap = load(f)
