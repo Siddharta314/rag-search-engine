@@ -4,6 +4,8 @@ def simple_clean(text: str) -> str:
     table = str.maketrans("", "", string.punctuation)
     return text.translate(table).lower()
 
+def remove_stopwords(text: str, stopwords: list[str]) -> str:
+    return " ".join([word for word in text.split() if word not in stopwords])
 
 def tokenize_based_word(text: str) -> list[str]:
     return text.split()
