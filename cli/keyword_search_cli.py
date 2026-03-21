@@ -12,30 +12,25 @@ def main() -> None:
     args = parser.parse_args()
     index = InvertedIndex()
 
+    if args.command == "build":
+        index.build()
+        index.save()
+        return
+    try:
+        index.load()
+    except FileNotFoundError:
+        print("File not found. Please run 'python keyword_search_cli.py build' first.")
+        return
+
     match args.command:
         case "search":
-            try:
-                index.load()
-                search(args.query, index)
-            except FileNotFoundError:
-                print("File not found. Please run 'python keyword_search_cli.py build' first.")
-        case "build":
-            index.build()
-            index.save()
+            search(args.query, index)
         case "tf":
-            try:
-                index.load()
-                tf = index.get_tf(args.doc_id, args.term)
-                print(f"Term frequency for document {args.doc_id} and term '{args.term}' = {tf}")
-            except FileNotFoundError:
-                print("File not found. Please run 'python keyword_search_cli.py build' first.")
+            tf = index.get_tf(args.doc_id, args.term)
+            print(f"Term frequency for document {args.doc_id} and term '{args.term}' = {tf}")
         case "idf":
-            try:
-                index.load()
-                idf = index.get_idf(args.term)
-                print(f"Inverse document frequency for term '{args.term}' = {idf:.2f}")
-            except FileNotFoundError:
-                print("File not found. Please run 'python keyword_search_cli.py build' first.")
+            idf = index.get_idf(args.term)
+            print(f"Inverse document frequency for term '{args.term}' = {idf:.2f}")
         case _:
             parser.print_help()
 
