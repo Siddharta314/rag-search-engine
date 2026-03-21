@@ -1,22 +1,14 @@
 #!/usr/bin/env python3
-
-import argparse
+"""
+CLI for keyword search engine
+"""
+from commands import create_parser
 from search_command import search
 from inverted_index import InvertedIndex
 
 
-
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Keyword Search CLI")
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    search_parser = subparsers.add_parser("search", help="Search movies using BM25")
-    search_parser.add_argument("query", type=str, help="Search query")
-    _ = subparsers.add_parser("build", help="Build the inverted index")
-    tf_parser = subparsers.add_parser("tf", help="Get term frequency for a document and term")
-    tf_parser.add_argument("doc_id", type=int, help="Document ID")
-    tf_parser.add_argument("term", type=str, help="Term")
-
+    parser = create_parser()
     args = parser.parse_args()
     index = InvertedIndex()
 
@@ -26,7 +18,7 @@ def main() -> None:
                 index.load()
                 search(args.query, index)
             except FileNotFoundError:
-                print("Index or docmap file not found. Please run 'python keyword_search_cli.py build' first.")
+                print("File not found. Please run 'python keyword_search_cli.py build' first.")
         case "build":
             index.build()
             index.save()
@@ -36,7 +28,14 @@ def main() -> None:
                 tf = index.get_tf(args.doc_id, args.term)
                 print(f"Term frequency for document {args.doc_id} and term '{args.term}' = {tf}")
             except FileNotFoundError:
-                print("Index or docmap file not found. Please run 'python keyword_search_cli.py build' first.")
+                print("File not found. Please run 'python keyword_search_cli.py build' first.")
+        case "idf":
+            try:
+                index.load()
+                idf = index.get_idf(args.term)
+                print(f"Inverse document frequency for term '{args.term}' = {idf:.2f}")
+            except FileNotFoundError:
+                print("File not found. Please run 'python keyword_search_cli.py build' first.")
         case _:
             parser.print_help()
 

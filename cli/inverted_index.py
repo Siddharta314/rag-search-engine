@@ -1,3 +1,4 @@
+import math
 from pickle import dump, load
 from nltk.stem import PorterStemmer
 from load_files import load_stopwords, load_movies
@@ -54,6 +55,12 @@ class InvertedIndex():
         clean_term = self.stemm.stem(tokens[0].lower())
         return self.term_frequencies.get(doc_id, {}).get(clean_term, 0)
 
+    def get_idf(self, term: str) -> float:
+        """
+        Returns the inverse document frequency for a given term.
+        """
+        docs = self.get_document(term)
+        return math.log((len(self.movies) + 1) / (len(docs) + 1))
 
     def build(self) -> None:
         for movie in self.movies:
