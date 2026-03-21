@@ -31,6 +31,10 @@ def main() -> None:
         case "idf":
             idf = index.get_idf(args.term)
             print(f"Inverse document frequency for term '{args.term}' = {idf:.2f}")
+        case "tfidf":
+            tf = index.get_tf(args.doc_id, args.term)
+            idf = index.get_idf(args.term)
+            print(f"TF-IDF for document {args.doc_id} and term '{args.term}' = {tf * idf:.2f}")
         case _:
             parser.print_help()
 
