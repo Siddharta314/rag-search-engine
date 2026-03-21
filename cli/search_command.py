@@ -1,5 +1,3 @@
-from nltk.stem import PorterStemmer
-from load_files import load_stopwords
 from text_processing import preprocess
 
 
@@ -12,10 +10,7 @@ def search(query: str, index) -> None:
     """
     print(f"Searching for: {query}")
 
-    # movies = load_movies()
-    stopwords: list[str] = load_stopwords()
-    stemmer = PorterStemmer()
-    search_token: list[str] = preprocess(query, stopwords, stemmer)
+    search_token: list[str] = preprocess(query, index.stopwords, index.stemm)
     count = 0
     limit = 5
     for token in search_token:
@@ -29,10 +24,3 @@ def search(query: str, index) -> None:
             count += 1
             if count >= limit:
                 return
-
-    ## Without the index
-    # for movie in movies:
-    #     title_token: list[str] = preprocess(movie["title"], stopwords, stemmer)
-
-    #     if compare_list_tokens(search_token, title_token):
-    #         print(f"{movie["id"]:<4}: {movie["title"]}")
