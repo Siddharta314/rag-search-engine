@@ -1,5 +1,5 @@
 import argparse
-from constants import BM25_B, BM25_K1, DEFAULT_BM25_LIMIT
+from .constants import BM25_B, BM25_K1, DEFAULT_BM25_LIMIT
 
 def create_parser():
     """

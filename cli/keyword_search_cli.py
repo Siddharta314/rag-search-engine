@@ -2,9 +2,9 @@
 """
 CLI for keyword search engine
 """
-from commands import create_parser
-from search_command import search
-from inverted_index import InvertedIndex
+from keyword_search.commands import create_parser
+from keyword_search.search_command import search
+from keyword_search.inverted_index import InvertedIndex
 
 
 def main() -> None:

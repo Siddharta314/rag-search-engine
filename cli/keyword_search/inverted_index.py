@@ -3,7 +3,8 @@ from pickle import dump, load
 from nltk.stem import PorterStemmer
 from load_files import load_stopwords, load_movies
 from text_processing import preprocess
-from constants import BM25_K1, BM25_B, DEFAULT_BM25_LIMIT
+from .constants import BM25_K1, BM25_B, DEFAULT_BM25_LIMIT
+
 class InvertedIndex():
     def __init__(self):
         self.index = {}
