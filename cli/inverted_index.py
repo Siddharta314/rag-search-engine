@@ -62,6 +62,17 @@ class InvertedIndex():
         docs = self.get_document(term)
         return math.log((len(self.movies) + 1) / (len(docs) + 1))
 
+    def get_bm25_idf(self, term: str) -> float:
+        """
+        Returns the BM25 inverse document frequency for a given term.
+        """
+        tokens = preprocess(term, self.stopwords, self.stemm)
+        if len(tokens) != 1:
+            raise ValueError("term must be a single token")
+        token = tokens[0]
+        docs = self.get_document(token)
+        return math.log((len(self.movies) - len(docs) + 0.5) / (len(docs) + 0.5) + 1)
+
     def build(self) -> None:
         for movie in self.movies:
             self.__add_document(movie["id"], f"{movie['title']} {movie['description']}")
@@ -100,4 +111,3 @@ class InvertedIndex():
         # load term frequencies
         with open(self.__tf_file, "rb") as f:
             self.term_frequencies = load(f)
-

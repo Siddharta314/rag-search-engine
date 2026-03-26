@@ -35,6 +35,9 @@ def main() -> None:
             tf = index.get_tf(args.doc_id, args.term)
             idf = index.get_idf(args.term)
             print(f"TF-IDF for document {args.doc_id} and term '{args.term}' = {tf * idf:.2f}")
+        case "bm25idf":
+            bm25_idf = index.get_bm25_idf(args.term)
+            print(f"BM25 IDF score of '{args.term}': {bm25_idf:.2f}")
         case _:
             parser.print_help()
 
