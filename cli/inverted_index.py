@@ -3,7 +3,7 @@ from pickle import dump, load
 from nltk.stem import PorterStemmer
 from load_files import load_stopwords, load_movies
 from text_processing import preprocess
-from constants import BM25_K1, BM25_B
+from constants import BM25_K1, BM25_B, DEFAULT_BM25_LIMIT
 class InvertedIndex():
     def __init__(self):
         self.index = {}
@@ -85,6 +85,25 @@ class InvertedIndex():
         length_norm = 1 - b + b * (self.doc_length[doc_id] / avg_doc_length)
         return tf / (tf + k1 *length_norm) * (k1 + 1)
 
+    def bm25(self, doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25_B) -> float:
+        """
+        Returns the BM25 score for a given document and term.
+        """
+        return self.get_bm25_tf(doc_id, term, k1, b) * self.get_bm25_idf(term)
+
+    def bm25_search(self, query: str, limit: int = DEFAULT_BM25_LIMIT) -> list[tuple[int, float]]:
+        """
+        Returns the top k documents for a given query using BM25.
+        """
+        tokens =  preprocess(query, self.stopwords, self.stemm)
+        scores = {} # doc_id : bm25_score
+        for doc in self.docmap.keys():
+            scores[doc] = 0.0
+            for token in tokens:
+                scores[doc] += self.bm25(doc, token)
+        result = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:limit]
+        return [{ "id": id, "title": self.docmap[id]["title"], "score": score } for id, score in result]
+
     def __get_avg_doc_length(self) -> float:
         """
         Returns the average document length.
@@ -114,14 +133,14 @@ class InvertedIndex():
         # save term frequencies
         with open(self.__tf_file, "wb") as f:
             dump(self.term_frequencies, f)
-        
+
         # save document lengths
         with open(self.__doc_lengths_path, "wb") as f:
             dump(self.doc_length, f)
 
     def load(self) -> None:
         # Raise an error if files don't exist
-        import os 
+        import os
         if not os.path.exists(self.__index_file) or not os.path.exists(self.__docmap_file):
             raise FileNotFoundError("Index or docmap file not found")
         # load index
@@ -135,7 +154,7 @@ class InvertedIndex():
         # load term frequencies
         with open(self.__tf_file, "rb") as f:
             self.term_frequencies = load(f)
-        
+
         # load document lengths
         with open(self.__doc_lengths_path, "rb") as f:
             self.doc_length = load(f)

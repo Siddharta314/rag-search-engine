@@ -1,5 +1,5 @@
 import argparse
-from constants import BM25_B, BM25_K1
+from constants import BM25_B, BM25_K1, DEFAULT_BM25_LIMIT
 
 def create_parser():
     """
@@ -38,4 +38,7 @@ def create_parser():
     bm25_tf_parser.add_argument("k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
     bm25_tf_parser.add_argument("b", type=float, nargs='?', default=BM25_B, help="Tunable BM25 B parameter")
 
+    bm25search_parser = subparsers.add_parser("bm25search", help="Search movies using full BM25 scoring")
+    bm25search_parser.add_argument("query", type=str, help="Search query")
+    bm25search_parser.add_argument("limit", type=int, nargs='?', default=DEFAULT_BM25_LIMIT, help="Number of results to return")
     return parser
