@@ -1,5 +1,5 @@
 import argparse
-from constants import BM25_K1
+from constants import BM25_B, BM25_K1
 
 def create_parser():
     """
@@ -36,5 +36,6 @@ def create_parser():
     bm25_tf_parser.add_argument("doc_id", type=int, help="Document ID")
     bm25_tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
     bm25_tf_parser.add_argument("k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
+    bm25_tf_parser.add_argument("b", type=float, nargs='?', default=BM25_B, help="Tunable BM25 B parameter")
 
     return parser

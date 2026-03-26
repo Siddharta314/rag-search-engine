@@ -3,11 +3,12 @@ from pickle import dump, load
 from nltk.stem import PorterStemmer
 from load_files import load_stopwords, load_movies
 from text_processing import preprocess
-from constants import BM25_K1
+from constants import BM25_K1, BM25_B
 class InvertedIndex():
     def __init__(self):
         self.index = {}
         self.docmap = {}
+        self.doc_length = {}
         self.term_frequencies = {}
         self.stemm = PorterStemmer()
         self.stopwords = set(load_stopwords())
@@ -15,6 +16,7 @@ class InvertedIndex():
         self.__index_file = "cache/index.pkl"
         self.__docmap_file = "cache/docmap.pkl"
         self.__tf_file = "cache/term_frequencies.pkl"
+        self.__doc_lengths_path = "cache/doc_lengths.pkl"
 
     def __add_document(self, doc_id: int, text: str) -> None:
         """
@@ -33,6 +35,7 @@ class InvertedIndex():
             self.index[token].add(doc_id)
             current_tf = self.term_frequencies[doc_id].get(token, 0)
             self.term_frequencies[doc_id][token] = current_tf + 1
+        self.doc_length[doc_id] = len(tokenized_text)
 
     def get_document(self, term: str) -> list[int]:
         """
@@ -73,12 +76,22 @@ class InvertedIndex():
         docs = self.get_document(token)
         return math.log((len(self.movies) - len(docs) + 0.5) / (len(docs) + 0.5) + 1)
 
-    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1) -> float:
+    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25_B) -> float:
         """
         Returns the BM25 term frequency for a given document and term.
         """
         tf = self.get_tf(doc_id, term)
-        return tf / (tf + k1) * (k1 + 1)
+        avg_doc_length = self.__get_avg_doc_length()
+        length_norm = 1 - b + b * (self.doc_length[doc_id] / avg_doc_length)
+        return tf / (tf + k1 *length_norm) * (k1 + 1)
+
+    def __get_avg_doc_length(self) -> float:
+        """
+        Returns the average document length.
+        """
+        if not self.doc_length:
+            return 0.0
+        return sum(self.doc_length.values()) / len(self.doc_length)
 
     def build(self) -> None:
         for movie in self.movies:
@@ -101,6 +114,10 @@ class InvertedIndex():
         # save term frequencies
         with open(self.__tf_file, "wb") as f:
             dump(self.term_frequencies, f)
+        
+        # save document lengths
+        with open(self.__doc_lengths_path, "wb") as f:
+            dump(self.doc_length, f)
 
     def load(self) -> None:
         # Raise an error if files don't exist
@@ -118,3 +135,7 @@ class InvertedIndex():
         # load term frequencies
         with open(self.__tf_file, "rb") as f:
             self.term_frequencies = load(f)
+        
+        # load document lengths
+        with open(self.__doc_lengths_path, "rb") as f:
+            self.doc_length = load(f)
