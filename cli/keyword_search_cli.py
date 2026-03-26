@@ -38,6 +38,9 @@ def main() -> None:
         case "bm25idf":
             bm25_idf = index.get_bm25_idf(args.term)
             print(f"BM25 IDF score of '{args.term}': {bm25_idf:.2f}")
+        case "bm25tf":
+            bm25_tf = index.get_bm25_tf(args.doc_id, args.term, args.k1)
+            print(f"BM25 TF score of '{args.term}' in document {args.doc_id}: {bm25_tf:.2f}")
         case _:
             parser.print_help()
 

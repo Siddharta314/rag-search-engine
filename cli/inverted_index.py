@@ -3,7 +3,7 @@ from pickle import dump, load
 from nltk.stem import PorterStemmer
 from load_files import load_stopwords, load_movies
 from text_processing import preprocess
-
+from constants import BM25_K1
 class InvertedIndex():
     def __init__(self):
         self.index = {}
@@ -72,6 +72,13 @@ class InvertedIndex():
         token = tokens[0]
         docs = self.get_document(token)
         return math.log((len(self.movies) - len(docs) + 0.5) / (len(docs) + 0.5) + 1)
+
+    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1) -> float:
+        """
+        Returns the BM25 term frequency for a given document and term.
+        """
+        tf = self.get_tf(doc_id, term)
+        return tf / (tf + k1) * (k1 + 1)
 
     def build(self) -> None:
         for movie in self.movies:
