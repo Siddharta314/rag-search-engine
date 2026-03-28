@@ -1,8 +1,13 @@
+import numpy as np
 from sentence_transformers import SentenceTransformer
+from load_files import load_movies
 
 class SemanticSearch():
     def __init__(self):
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.embeddings = None
+        self.documents = None
+        self.document_map = {}
 
     def generate_embedding(self, text):
         clean_text = text.strip()
@@ -10,6 +15,21 @@ class SemanticSearch():
             raise ValueError("Text cannot be empty")
         result = self.model.encode([clean_text])
         return result[0]
+
+    def build_embeddings(self, documents):
+        self.documents = documents
+        for doc in documents:
+            self.document_map[doc["id"]] = f"{doc['title']}: {doc['description']}"
+        self.embeddings = self.model.encode(documents, show_progress_bar=True)
+        np.save("cache/movie_embeddings.npy", self.embeddings)
+        return self.embeddings
+
+    def load_or_create_embeddings(self, documents):
+        try:
+            self.embeddings = np.load("cache/movie_embeddings.npy")
+            return self.embeddings if len(self.embeddings) == len(documents) else self.build_embeddings(documents)
+        except FileNotFoundError:
+            return self.build_embeddings(documents)
 
 def verify_model() -> bool:
     try:
@@ -29,3 +49,11 @@ def embed_text(text):
     print(f"First 3 dimensions: {embedding[:3]}")
     print(f"Dimensions: {len(embedding)}")
     return embedding
+
+def verify_embeddings():
+    semantic_search = SemanticSearch()
+    movies = load_movies()
+    semantic_search.load_or_create_embeddings(movies)
+    print(f"Number of docs:   {len(semantic_search.documents)}")
+    print(f"Embeddings shape: {semantic_search.embeddings.shape[0]} vectors in {semantic_search.embeddings.shape[1]} dimensions")
+    return True
