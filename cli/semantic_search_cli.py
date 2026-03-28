@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from semantic_search.commands import create_parser
-from semantic_search.semantic_search import verify_model
+from semantic_search.semantic_search import verify_model, embed_text
 
 
 def main():
@@ -10,6 +10,8 @@ def main():
     match args.command:
         case "verify":
             verify_model()
+        case "embed_text":
+            embed_text(args.text)
         case _:
             parser.print_help()
 
