@@ -18,13 +18,17 @@ class SemanticSearch():
 
     def build_embeddings(self, documents):
         self.documents = documents
+        doc_string_list = []
         for doc in documents:
-            self.document_map[doc["id"]] = f"{doc['title']}: {doc['description']}"
-        self.embeddings = self.model.encode(documents, show_progress_bar=True)
+            self.document_map[doc["id"]] = doc
+            doc_string_list.append(f"{doc['title']}: {doc['description']}")
+        self.embeddings = self.model.encode(doc_string_list, show_progress_bar=True)
         np.save("cache/movie_embeddings.npy", self.embeddings)
         return self.embeddings
 
     def load_or_create_embeddings(self, documents):
+        self.documents = documents
+        self.document_map = {doc["id"]: doc for doc in documents}
         try:
             self.embeddings = np.load("cache/movie_embeddings.npy")
             return self.embeddings if len(self.embeddings) == len(documents) else self.build_embeddings(documents)

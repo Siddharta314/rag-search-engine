@@ -10,4 +10,6 @@ def create_parser():
     embed_parser = subparsers.add_parser("embed_text", help="Embed a text")
     embed_parser.add_argument("text", help="Text to embed")
 
+    _ = subparsers.add_parser("verify_embeddings", help="Verify the embeddings")
+
     return parser
