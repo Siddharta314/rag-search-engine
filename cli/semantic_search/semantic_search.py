@@ -1,6 +1,7 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from load_files import load_movies
+from math_utils import cosine_similarity
 
 class SemanticSearch():
     def __init__(self):
@@ -34,6 +35,21 @@ class SemanticSearch():
             return self.embeddings if len(self.embeddings) == len(documents) else self.build_embeddings(documents)
         except FileNotFoundError:
             return self.build_embeddings(documents)
+
+    def search(self, query, limit):
+        if self.embeddings is None:
+            raise ValueError("No embeddings loaded. Call `load_or_create_embeddings` first.")
+        query_embedding = self.generate_embedding(query)
+        pairs = []
+        for i, doc_embedding in enumerate(self.embeddings):
+            similarity = cosine_similarity(query_embedding, doc_embedding)
+            pairs.append((similarity, self.documents[i]))
+        pairs.sort(key=lambda x: x[0], reverse=True)
+        return [{
+            "score": pairs[i][0],
+            "title": pairs[i][1]["title"],
+            "description": pairs[i][1]["description"]
+        } for i in range(len(pairs[:limit]))]
 
 
 def verify_model() -> bool:
@@ -71,3 +87,11 @@ def embed_query_text(query):
     print(f"First 5 dimensions: {embedding[:5]}")
     print(f"Shape: {embedding.shape}")
     return embedding
+
+def search(query, limit):
+    semantic_search = SemanticSearch()
+    movies = load_movies()
+    semantic_search.load_or_create_embeddings(movies)
+    results = semantic_search.search(query, limit)
+    # TODO print in expected format
+    return results

@@ -1,5 +1,5 @@
 import argparse
-
+SEARCH_DEFAULT_LIMIT = 5
 
 def create_parser():
     parser = argparse.ArgumentParser(description="Semantic Search CLI")
@@ -15,4 +15,7 @@ def create_parser():
     query_parser = subparsers.add_parser("embedquery", help="Embed a query")
     query_parser.add_argument("query", help="Query to embed")
 
+    search_parser = subparsers.add_parser("search", help="Search for movies")
+    search_parser.add_argument("query", help="Query to search for")
+    search_parser.add_argument("--limit", type=int, default=5, help="Limit the number of results")
     return parser
