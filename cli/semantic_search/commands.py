@@ -12,4 +12,7 @@ def create_parser():
 
     _ = subparsers.add_parser("verify_embeddings", help="Verify the embeddings")
 
+    query_parser = subparsers.add_parser("embedquery", help="Embed a query")
+    query_parser.add_argument("query", help="Query to embed")
+
     return parser

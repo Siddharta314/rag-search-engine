@@ -35,6 +35,7 @@ class SemanticSearch():
         except FileNotFoundError:
             return self.build_embeddings(documents)
 
+
 def verify_model() -> bool:
     try:
         semantic_search = SemanticSearch()
@@ -61,3 +62,12 @@ def verify_embeddings():
     print(f"Number of docs:   {len(semantic_search.documents)}")
     print(f"Embeddings shape: {semantic_search.embeddings.shape[0]} vectors in {semantic_search.embeddings.shape[1]} dimensions")
     return True
+
+
+def embed_query_text(query):
+    semantic_search = SemanticSearch()
+    print(f"Query: {query}")
+    embedding = semantic_search.generate_embedding(query)
+    print(f"First 5 dimensions: {embedding[:5]}")
+    print(f"Shape: {embedding.shape}")
+    return embedding
