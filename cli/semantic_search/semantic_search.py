@@ -93,5 +93,17 @@ def search(query, limit):
     movies = load_movies()
     semantic_search.load_or_create_embeddings(movies)
     results = semantic_search.search(query, limit)
-    # TODO print in expected format
+    for index, item in enumerate(results):
+        print(f"{index + 1}. {item['title']} (score: {item['score']:.4f})\n   {item['description']}")
     return results
+
+
+def chunk(text: str, chunk_size: int = 200):
+    split_text = text.split()
+    chunks = []
+    for i in range(0, len(split_text), chunk_size):
+        chunks.append(" ".join(split_text[i:i + chunk_size]))
+    print(f"Chunking {len(text)} characters")
+    for i, chunk in enumerate(chunks):
+        print(f"{i + 1}. {chunk}")
+    return chunks

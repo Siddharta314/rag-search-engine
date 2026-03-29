@@ -44,3 +44,10 @@ The key insight is:
 * Long documents get higher length_norm and are penalized (lower scores)
 * Short documents get lower length_norm and are boosted (higher scores)
 
+## Chunking
+Problems:
+* Semantic dilution: The embedding tries to capture ALL topics at once
+* Token limits: Models have a limit to what they can fit in one embedding effectively
+* Poor precision: Specific concepts get "averaged out"
+* Irrelevant matches: Parts of the document may match queries poorly
+

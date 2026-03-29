@@ -18,4 +18,8 @@ def create_parser():
     search_parser = subparsers.add_parser("search", help="Search for movies")
     search_parser.add_argument("query", help="Query to search for")
     search_parser.add_argument("--limit", type=int, default=5, help="Limit the number of results")
+
+    chunk_parser = subparsers.add_parser("chunk", help="Chunk a document")
+    chunk_parser.add_argument("text", help="Text to chunk")
+    chunk_parser.add_argument("--chunk-size", type=int, default=200, help="Chunk size")
     return parser

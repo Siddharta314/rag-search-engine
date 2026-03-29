@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from semantic_search.commands import create_parser
-from semantic_search.semantic_search import verify_model, embed_text, verify_embeddings, embed_query_text, search
+from semantic_search.semantic_search import verify_model, embed_text, verify_embeddings, embed_query_text, search, chunk
 
 
 def main():
@@ -18,6 +18,8 @@ def main():
             embed_query_text(args.query)
         case "search":
             search(args.query, args.limit)
+        case "chunk":
+            chunk(args.text, args.chunk_size)
         case _:
             parser.print_help()
 
