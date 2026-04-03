@@ -28,4 +28,6 @@ def create_parser():
     semantic_chunk_parser.add_argument("text", help="Text to semantic chunk")
     semantic_chunk_parser.add_argument("--max-chunk-size", type=int, default=4, nargs='?', help="Chunk size")
     semantic_chunk_parser.add_argument("--overlap", type=int, default=0, nargs="?", help="Overlap between chunks")
+
+    _ = subparsers.add_parser("embed_chunks", help="Embed chunks")
     return parser

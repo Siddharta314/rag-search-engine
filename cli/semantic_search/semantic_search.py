@@ -1,5 +1,4 @@
 import numpy as np
-import re
 from sentence_transformers import SentenceTransformer
 from load_files import load_movies
 from math_utils import cosine_similarity
@@ -113,18 +112,3 @@ def chunk(text: str, chunk_size: int = 200, overlap: int = 0):
         print(f"{i + 1}. {c}")
     return chunks
 
-def semantic_chunk(text: str, max_chunk_size: int = 4, overlap: int = 0):
-    split_re = r"(?<=[.!?])\s+"
-    sentences = re.split(split_re, text)
-    chunks = []
-    i = 0
-    while i < len(sentences):
-        chunks.append(" ".join(sentences[i:i + max_chunk_size]))
-        if i + max_chunk_size >= len(sentences):
-            break
-        i += max_chunk_size - overlap
-    
-    print(f"Semantically chunking {len(text)} characters")
-    for i, c in enumerate(chunks):
-        print(f"{i + 1}. {c}")
-    return chunks
