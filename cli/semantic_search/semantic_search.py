@@ -98,11 +98,15 @@ def search(query, limit):
     return results
 
 
-def chunk(text: str, chunk_size: int = 200):
+def chunk(text: str, chunk_size: int = 200, overlap: int = 0):
     split_text = text.split()
     chunks = []
-    for i in range(0, len(split_text), chunk_size):
+    i = 0
+    while i < len(split_text):
         chunks.append(" ".join(split_text[i:i + chunk_size]))
+        if i + chunk_size >= len(split_text):
+            break
+        i += chunk_size - overlap
     print(f"Chunking {len(text)} characters")
     for i, chunk in enumerate(chunks):
         print(f"{i + 1}. {chunk}")

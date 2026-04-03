@@ -22,4 +22,5 @@ def create_parser():
     chunk_parser = subparsers.add_parser("chunk", help="Chunk a document")
     chunk_parser.add_argument("text", help="Text to chunk")
     chunk_parser.add_argument("--chunk-size", type=int, default=200, help="Chunk size")
+    chunk_parser.add_argument("--overlap", type=int, default=0, help="Overlap between chunks")
     return parser

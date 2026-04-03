@@ -19,7 +19,7 @@ def main():
         case "search":
             search(args.query, args.limit)
         case "chunk":
-            chunk(args.text, args.chunk_size)
+            chunk(args.text, args.chunk_size, args.overlap)
         case _:
             parser.print_help()
 
