@@ -23,4 +23,9 @@ def create_parser():
     chunk_parser.add_argument("text", help="Text to chunk")
     chunk_parser.add_argument("--chunk-size", type=int, default=200, help="Chunk size")
     chunk_parser.add_argument("--overlap", type=int, default=0, help="Overlap between chunks")
+    
+    semantic_chunk_parser = subparsers.add_parser("semantic_chunk", help="Semantic chunk a document")
+    semantic_chunk_parser.add_argument("text", help="Text to semantic chunk")
+    semantic_chunk_parser.add_argument("--max-chunk-size", type=int, default=4, nargs='?', help="Chunk size")
+    semantic_chunk_parser.add_argument("--overlap", type=int, default=0, nargs="?", help="Overlap between chunks")
     return parser

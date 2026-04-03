@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from semantic_search.commands import create_parser
-from semantic_search.semantic_search import verify_model, embed_text, verify_embeddings, embed_query_text, search, chunk
-
+from semantic_search.semantic_search import (
+    verify_model, embed_text, verify_embeddings, embed_query_text, search, chunk, semantic_chunk
+)
 
 def main():
     parser = create_parser()
@@ -20,6 +21,8 @@ def main():
             search(args.query, args.limit)
         case "chunk":
             chunk(args.text, args.chunk_size, args.overlap)
+        case "semantic_chunk":
+            semantic_chunk(args.text, args.max_chunk_size, args.overlap)
         case _:
             parser.print_help()
 
