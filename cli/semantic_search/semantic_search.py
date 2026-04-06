@@ -1,23 +1,24 @@
 import numpy as np
+from typing import Any
 from sentence_transformers import SentenceTransformer
 from load_files import load_movies
 from math_utils import cosine_similarity
 
 class SemanticSearch():
     def __init__(self):
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.embeddings = None
-        self.documents = None
-        self.document_map = {}
+        self.model: SentenceTransformer = SentenceTransformer('all-MiniLM-L6-v2')
+        self.embeddings: np.ndarray | None = None
+        self.documents: list[dict[str, Any]] | None = None
+        self.document_map: dict[int, dict[str, Any]] = {}
 
-    def generate_embedding(self, text):
+    def generate_embedding(self, text) -> np.ndarray:
         clean_text = text.strip()
         if clean_text == "":
             raise ValueError("Text cannot be empty")
         result = self.model.encode([clean_text])
         return result[0]
 
-    def build_embeddings(self, documents):
+    def build_embeddings(self, documents) -> np.ndarray:
         self.documents = documents
         doc_string_list = []
         for doc in documents:
@@ -31,13 +32,15 @@ class SemanticSearch():
         self.documents = documents
         self.document_map = {doc["id"]: doc for doc in documents}
         try:
-            self.embeddings = np.load("cache/movie_embeddings.npy")
-            return self.embeddings if len(self.embeddings) == len(documents) else self.build_embeddings(documents)
-        except FileNotFoundError:
+            loaded_embeddings = np.load("cache/movie_embeddings.npy")
+            if len(loaded_embeddings) == len(documents):
+                self.embeddings = loaded_embeddings
+                return self.embeddings
+        except (FileNotFoundError, ValueError):
             return self.build_embeddings(documents)
 
-    def search(self, query, limit):
-        if self.embeddings is None:
+    def search(self, query, limit) -> list[dict]:
+        if self.embeddings is None or self.documents is None:
             raise ValueError("No embeddings loaded. Call `load_or_create_embeddings` first.")
         query_embedding = self.generate_embedding(query)
         pairs = []
@@ -71,10 +74,13 @@ def embed_text(text):
     print(f"Dimensions: {len(embedding)}")
     return embedding
 
-def verify_embeddings():
+def verify_embeddings() :
     semantic_search = SemanticSearch()
     movies = load_movies()
     semantic_search.load_or_create_embeddings(movies)
+    if semantic_search.embeddings is None or semantic_search.documents is None:
+        print("Embeddings or documents not loaded.")
+        return False
     print(f"Number of docs:   {len(semantic_search.documents)}")
     print(f"Embeddings shape: {semantic_search.embeddings.shape[0]} vectors in {semantic_search.embeddings.shape[1]} dimensions")
     return True
@@ -111,4 +117,3 @@ def chunk(text: str, chunk_size: int = 200, overlap: int = 0):
     for i, c in enumerate(chunks):
         print(f"{i + 1}. {c}")
     return chunks
-
