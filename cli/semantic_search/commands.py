@@ -29,5 +29,9 @@ def create_parser():
     semantic_chunk_parser.add_argument("--max-chunk-size", type=int, default=4, nargs='?', help="Chunk size")
     semantic_chunk_parser.add_argument("--overlap", type=int, default=0, nargs="?", help="Overlap between chunks")
 
+    semantic_chunk_parser = subparsers.add_parser("search_chunked", help="Search in chunked documents by query")
+    semantic_chunk_parser.add_argument("query", help="Text to search")
+    semantic_chunk_parser.add_argument("--limit", type=int, default=5, nargs='?', help="Limit the number of results")
+
     _ = subparsers.add_parser("embed_chunks", help="Embed chunks")
     return parser

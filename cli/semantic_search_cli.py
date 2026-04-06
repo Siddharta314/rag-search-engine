@@ -30,6 +30,14 @@ def main():
             movies = load_movies()
             embeddings = css.load_or_create_chunk_embeddings(movies)
             print(f"Generated {len(embeddings)} chunked embeddings")
+        case "search_chunked":
+            css = ChunkedSemanticSearch()
+            movies = load_movies()
+            css.load_or_create_chunk_embeddings(movies)
+            results = css.search_chunks(args.query, args.limit)
+            for i, result in enumerate(results):
+                print(f"\n{i+1}. {result['title']} (score: {result['score']:.4f})")
+                print(f"   {result['document']}...")
         case _:
             parser.print_help()
 

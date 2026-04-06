@@ -2,7 +2,9 @@ import re
 import json
 import numpy as np
 from .semantic_search import SemanticSearch
+from math_utils import cosine_similarity 
 
+SCORE_PRECISION = 4
 class ChunkedSemanticSearch(SemanticSearch):
     def __init__(self) -> None:
         super().__init__()
@@ -15,18 +17,18 @@ class ChunkedSemanticSearch(SemanticSearch):
         self.chunk_metadata = []
         self.documents = documents
         for idx, doc in enumerate(self.documents):
+            movie_id = doc["id"] 
             if doc["description"] is None:
                 continue
-            self.document_map[doc["id"]] = doc
+            self.document_map[movie_id] = doc
             chunks_doc = semantic_chunk(doc["description"], 4, 1)
             chunks.extend(chunks_doc)
             for i in range(len(chunks_doc)):
                 self.chunk_metadata.append({
-                    "movie_idx": idx,
+                    "movie_idx": movie_id,
                     "chunk_idx": i,
                     "total_chunks": len(chunks_doc)
                 })
-
         self.chunk_embeddings = self.model.encode(chunks, show_progress_bar=True)
 
         np.save("cache/chunk_embeddings.npy", self.chunk_embeddings)
@@ -46,6 +48,34 @@ class ChunkedSemanticSearch(SemanticSearch):
         except (FileNotFoundError, json.JSONDecodeError):
             return self.build_chunk_embeddings(documents)
 
+    def search_chunks(self, query: str, limit: int = 10):
+        query_embedded = self.generate_embedding(query)
+        chunk_scores = []
+        for idx, chunk in enumerate(self.chunk_embeddings):
+            chunk_scores.append({
+                "chunk_idx": idx,
+                "movie_idx": self.chunk_metadata[idx]["movie_idx"],
+                "score": cosine_similarity(query_embedded, chunk)
+            })
+        movies_index_score = {}
+        for chunk in chunk_scores:
+            movie_index = chunk["movie_idx"]
+            current_score = chunk["score"]
+            if movie_index not in movies_index_score or movies_index_score[movie_index] < current_score:
+                movies_index_score[movie_index] = current_score
+        sorted_movies = sorted(movies_index_score.items(), key=lambda x: x[1], reverse=True)
+        results = []
+        for movie_index, score in sorted_movies[:limit]:
+            movie_data = self.document_map[movie_index]
+            results.append({
+            "id": movie_index,
+            "title": movie_data["title"],
+            "document": movie_data["description"][:100],
+            "score": round(score, SCORE_PRECISION), 
+            "metadata": movie_data.get("metadata", {})
+        })
+        return results
+
 def semantic_chunk(text: str, max_chunk_size: int = 4, overlap: int = 0):
     sentences = re.split(r"(?<=[.!?])\s+", text)
     chunks = []
@@ -55,7 +85,7 @@ def semantic_chunk(text: str, max_chunk_size: int = 4, overlap: int = 0):
         if i + max_chunk_size >= len(sentences):
             break
         i += max_chunk_size - overlap
-    
+
     print(f"Semantically chunking {len(text)} characters")
     for i, c in enumerate(chunks):
         print(f"{i + 1}. {c}")
