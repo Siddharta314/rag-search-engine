@@ -77,7 +77,14 @@ class ChunkedSemanticSearch(SemanticSearch):
         return results
 
 def semantic_chunk(text: str, max_chunk_size: int = 4, overlap: int = 0):
+    text = text.strip()
+    
+    # 2. Si después de limpiar no queda nada, salimos sin imprimir "1. "
+    if not text:
+        print("Semantically chunking 0 characters")
+        return []
     sentences = re.split(r"(?<=[.!?])\s+", text)
+    sentences = [s.strip() for s in sentences if s.strip()]
     chunks = []
     i = 0
     while i < len(sentences):
