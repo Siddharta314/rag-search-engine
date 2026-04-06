@@ -1,19 +1,27 @@
 import re
 import json
+from typing import TypedDict, Any
 import numpy as np
 from .semantic_search import SemanticSearch
 from math_utils import cosine_similarity 
 
 SCORE_PRECISION = 4
+
+class SearchResult(TypedDict):
+    id: int
+    title: str
+    document: str
+    score: float
+    metadata: dict[str, Any]
 class ChunkedSemanticSearch(SemanticSearch):
     def __init__(self) -> None:
         super().__init__()
-        self.chunk_embeddings = None
-        self.chunk_metadata = None
+        self.chunk_embeddings: np.ndarray = np.array([])
+        self.chunk_metadata: list[dict] = []
 
     def build_chunk_embeddings(self, documents):
         chunks = []
-        self.chunk_embeddings = []
+        self.chunk_embeddings = np.array([])
         self.chunk_metadata = []
         self.documents = documents
         for idx, doc in enumerate(self.documents):
@@ -48,7 +56,7 @@ class ChunkedSemanticSearch(SemanticSearch):
         except (FileNotFoundError, json.JSONDecodeError):
             return self.build_chunk_embeddings(documents)
 
-    def search_chunks(self, query: str, limit: int = 10):
+    def search_chunks(self, query: str, limit: int = 10)-> list[SearchResult]:
         query_embedded = self.generate_embedding(query)
         chunk_scores = []
         for idx, chunk in enumerate(self.chunk_embeddings):
