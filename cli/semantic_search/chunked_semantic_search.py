@@ -19,12 +19,15 @@ class ChunkedSemanticSearch(SemanticSearch):
         self.chunk_embeddings: np.ndarray = np.array([])
         self.chunk_metadata: list[dict] = []
 
-    def build_chunk_embeddings(self, documents):
+    def build_chunk_embeddings(self, documents) -> np.ndarray:
         chunks = []
         self.chunk_embeddings = np.array([])
         self.chunk_metadata = []
         self.documents = documents
-        for idx, doc in enumerate(self.documents):
+        if not self.documents:
+            print("No documents to process for chunk embeddings.")
+            return self.chunk_embeddings
+        for doc in self.documents:
             movie_id = doc["id"] 
             if doc["description"] is None:
                 continue
@@ -48,11 +51,15 @@ class ChunkedSemanticSearch(SemanticSearch):
         self.documents = documents
         self.document_map = {doc["id"]: doc for doc in documents}
         try:
-            self.chunk_embeddings = np.load("cache/chunk_embeddings.npy")
+            loaded_embeddings = np.load("cache/chunk_embeddings.npy")
             with open("cache/chunk_metadata.json", "r", encoding="utf-8") as f:
                 metadata = json.load(f)
-                self.chunk_metadata = metadata["chunks"]
-            return self.chunk_embeddings if len(self.chunk_embeddings) == len(self.chunk_metadata) else self.build_chunk_embeddings(documents)
+                loaded_metadata = metadata["chunks"]
+            if len(loaded_embeddings) == len(loaded_metadata):
+                self.chunk_embeddings = loaded_embeddings
+                self.chunk_metadata = loaded_metadata
+                return self.chunk_embeddings
+            return self.build_chunk_embeddings(documents)
         except (FileNotFoundError, json.JSONDecodeError):
             return self.build_chunk_embeddings(documents)
 

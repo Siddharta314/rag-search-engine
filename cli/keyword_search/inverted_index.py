@@ -92,7 +92,7 @@ class InvertedIndex():
         """
         return self.get_bm25_tf(doc_id, term, k1, b) * self.get_bm25_idf(term)
 
-    def bm25_search(self, query: str, limit: int = DEFAULT_BM25_LIMIT) -> list[tuple[int, float]]:
+    def bm25_search(self, query: str, limit: int = DEFAULT_BM25_LIMIT) -> list[dict[str, str | float]]:
         """
         Returns the top k documents for a given query using BM25.
         """
@@ -117,6 +117,10 @@ class InvertedIndex():
         for movie in self.movies:
             self.__add_document(movie["id"], f"{movie['title']} {movie['description']}")
             self.docmap[movie["id"]] = movie
+
+    @property
+    def index_path(self) -> str:
+        return self.__index_file
 
     def save(self) -> None:
         import os
