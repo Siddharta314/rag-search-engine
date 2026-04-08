@@ -1,11 +1,14 @@
 import math
 from pickle import dump, load
-from nltk.stem import PorterStemmer
-from load_files import load_stopwords, load_movies
-from text_processing import preprocess
-from .constants import BM25_K1, BM25_B, DEFAULT_BM25_LIMIT
 
-class InvertedIndex():
+from load_files import load_movies, load_stopwords
+from nltk.stem import PorterStemmer
+from text_processing import preprocess
+
+from .constants import BM25_B, BM25_K1, DEFAULT_BM25_LIMIT
+
+
+class InvertedIndex:
     def __init__(self):
         self.index = {}
         self.docmap = {}
@@ -20,14 +23,14 @@ class InvertedIndex():
         self.__doc_lengths_path = "cache/doc_lengths.pkl"
 
     def __add_document(self, doc_id: int, text: str) -> None:
-        """
-        Adds a doc_id to the index.
-        
+        """Add a doc_id to the index.
+
         Args:
             doc_id (int): The document ID.
             text (str): The text of the document.
+
         """
-        tokenized_text : list[str] = preprocess(text, self.stopwords, self.stemm)
+        tokenized_text: list[str] = preprocess(text, self.stopwords, self.stemm)
         if doc_id not in self.term_frequencies:
             self.term_frequencies[doc_id] = {}
         for token in tokenized_text:
@@ -39,9 +42,7 @@ class InvertedIndex():
         self.doc_length[doc_id] = len(tokenized_text)
 
     def get_document(self, term: str) -> list[int]:
-        """
-        Returns the set of document IDs that contain the given term in ascending order.
-        """
+        """Return the set of document IDs that contain the given term in ascending order."""
         if term in self.stopwords:
             return []
         clean_term = self.stemm.stem(term.lower())
@@ -49,9 +50,7 @@ class InvertedIndex():
         return sorted(docs_id)
 
     def get_tf(self, doc_id: int, term: str) -> int:
-        """
-        Returns the term frequency for a given document and term.
-        """
+        """Return the term frequency for a given document and term."""
         tokens = term.split()
         if len(tokens) != 1:
             raise ValueError(f"Expected a single token, but got: '{term}'")
@@ -60,16 +59,12 @@ class InvertedIndex():
         return self.term_frequencies.get(doc_id, {}).get(clean_term, 0)
 
     def get_idf(self, term: str) -> float:
-        """
-        Returns the inverse document frequency for a given term.
-        """
+        """Return the inverse document frequency for a given term."""
         docs = self.get_document(term)
         return math.log((len(self.movies) + 1) / (len(docs) + 1))
 
     def get_bm25_idf(self, term: str) -> float:
-        """
-        Returns the BM25 inverse document frequency for a given term.
-        """
+        """Return the BM25 inverse document frequency for a given term."""
         tokens = preprocess(term, self.stopwords, self.stemm)
         if len(tokens) != 1:
             raise ValueError("term must be a single token")
@@ -77,38 +72,39 @@ class InvertedIndex():
         docs = self.get_document(token)
         return math.log((len(self.movies) - len(docs) + 0.5) / (len(docs) + 0.5) + 1)
 
-    def get_bm25_tf(self, doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25_B) -> float:
-        """
-        Returns the BM25 term frequency for a given document and term.
-        """
+    def get_bm25_tf(
+        self, doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25_B
+    ) -> float:
+        """Return the BM25 term frequency for a given document and term."""
         tf = self.get_tf(doc_id, term)
         avg_doc_length = self.__get_avg_doc_length()
         length_norm = 1 - b + b * (self.doc_length[doc_id] / avg_doc_length)
-        return tf / (tf + k1 *length_norm) * (k1 + 1)
+        return tf / (tf + k1 * length_norm) * (k1 + 1)
 
-    def bm25(self, doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25_B) -> float:
-        """
-        Returns the BM25 score for a given document and term.
-        """
+    def bm25(
+        self, doc_id: int, term: str, k1: float = BM25_K1, b: float = BM25_B
+    ) -> float:
+        """Return the BM25 score for a given document and term."""
         return self.get_bm25_tf(doc_id, term, k1, b) * self.get_bm25_idf(term)
 
-    def bm25_search(self, query: str, limit: int = DEFAULT_BM25_LIMIT) -> list[dict[str, str | float]]:
-        """
-        Returns the top k documents for a given query using BM25.
-        """
-        tokens =  preprocess(query, self.stopwords, self.stemm)
-        scores = {} # doc_id : bm25_score
-        for doc in self.docmap.keys():
+    def bm25_search(
+        self, query: str, limit: int = DEFAULT_BM25_LIMIT
+    ) -> list[dict[str, str | float]]:
+        """Return the top k documents for a given query using BM25."""
+        tokens = preprocess(query, self.stopwords, self.stemm)
+        scores = {}  # doc_id : bm25_score
+        for doc in self.docmap:
             scores[doc] = 0.0
             for token in tokens:
                 scores[doc] += self.bm25(doc, token)
         result = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:limit]
-        return [{ "id": id, "title": self.docmap[id]["title"], "score": score } for id, score in result]
+        return [
+            {"id": id, "title": self.docmap[id]["title"], "score": score}
+            for id, score in result
+        ]
 
     def __get_avg_doc_length(self) -> float:
-        """
-        Returns the average document length.
-        """
+        """Return the average document length."""
         if not self.doc_length:
             return 0.0
         return sum(self.doc_length.values()) / len(self.doc_length)
@@ -124,6 +120,7 @@ class InvertedIndex():
 
     def save(self) -> None:
         import os
+
         # create cache directory
         os.makedirs("cache", exist_ok=True)
 
@@ -146,7 +143,10 @@ class InvertedIndex():
     def load(self) -> None:
         # Raise an error if files don't exist
         import os
-        if not os.path.exists(self.__index_file) or not os.path.exists(self.__docmap_file):
+
+        if not os.path.exists(self.__index_file) or not os.path.exists(
+            self.__docmap_file
+        ):
             raise FileNotFoundError("Index or docmap file not found")
         # load index
         with open(self.__index_file, "rb") as f:

@@ -13,10 +13,18 @@ dependencies = [
 ]
 
 [tool.ruff.lint]
-# D100-D107 are all the "Missing Docstring" rules
-ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107"]
+select = ["E", "F", "D", "B", "SIM", "I", "UP", "S", "N"]
+ignore = [
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D203","D213",
+    "E501", 
+    "S301"
+]
 
 [tool.ruff.lint.isort]
-# This makes Ruff's import sorter behave like the "isort" tool
 combine-as-imports = true
-force-single-line = false
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false

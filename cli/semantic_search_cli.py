@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
+from load_files import load_movies
+from semantic_search.chunked_semantic_search import (
+    ChunkedSemanticSearch,
+    semantic_chunk,
+)
 from semantic_search.commands import create_parser
 from semantic_search.semantic_search import (
-    verify_model, embed_text, verify_embeddings, embed_query_text, search, chunk
+    chunk,
+    embed_query_text,
+    embed_text,
+    search,
+    verify_embeddings,
+    verify_model,
 )
-from semantic_search.chunked_semantic_search import semantic_chunk, ChunkedSemanticSearch
-from load_files import load_movies
+
 
 def main():
     parser = create_parser()
@@ -36,10 +45,11 @@ def main():
             css.load_or_create_chunk_embeddings(movies)
             results = css.search_chunks(args.query, args.limit)
             for i, result in enumerate(results):
-                print(f"\n{i+1}. {result['title']} (score: {result['score']:.4f})")
+                print(f"\n{i + 1}. {result['title']} (score: {result['score']:.4f})")
                 print(f"   {result['document']}...")
         case _:
             parser.print_help()
+
 
 if __name__ == "__main__":
     main()

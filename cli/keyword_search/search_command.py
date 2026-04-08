@@ -1,12 +1,15 @@
 from text_processing import preprocess
 
+from .inverted_index import InvertedIndex
 
-def search(query: str, index) -> None:
-    """
-    Search for movies based on a query string.
-    
+
+def search(query: str, index: InvertedIndex) -> None:
+    """Search for movies based on a query string.
+
     Args:
         query (str): The search query string.
+        index (InvertedIndex): The inverted index to search in.
+
     """
     print(f"Searching for: {query}")
 

@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 from google import genai
 
@@ -11,7 +12,7 @@ client = genai.Client(api_key=api_key)
 
 response = client.models.generate_content(
     model="gemma-3-27b-it",
-    contents="Why is Boot.dev such a great place to learn about RAG? Use one paragraph maximum."
+    contents="Why is Boot.dev such a great place to learn about RAG? Use one paragraph maximum.",
 )
 print(response.text)
 print("Prompt tokens:", response.usage_metadata.prompt_token_count)
