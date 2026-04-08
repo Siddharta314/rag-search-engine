@@ -9,9 +9,9 @@
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff" 
     },
-	"pylint.args": [
-        "--disable=C0114",
-        "--disable=C0115",
-        "--disable=C0116"
-    ]
+	// "pylint.args": [
+    //     "--disable=C0114",
+    //     "--disable=C0115",
+    //     "--disable=C0116"
+    // ]
 }
