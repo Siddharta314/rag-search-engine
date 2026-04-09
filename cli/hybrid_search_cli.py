@@ -1,7 +1,7 @@
 import argparse
 
 from hybrid_search.hybrd_search import HybridSearch
-from hybrid_search.llm_utils import spell_correct
+from hybrid_search.llm_utils import rewrite_query, spell_correct
 from load_files import load_movies
 from math_utils import normalize
 
@@ -37,7 +37,7 @@ def main() -> None:
     rrf_search.add_argument(
         "--enhance",
         type=str,
-        choices=["spell"],
+        choices=["spell", "rewrite"],
         help="Query enhancement method",
     )
 
@@ -70,6 +70,13 @@ def main() -> None:
                 print(
                     f"Enhanced query ({args.enhance}): '{args.query}' -> '{enhanced_query}'\n"
                 )
+            elif args.enhance == "rewrite":
+                enhanced_query = rewrite_query(args.query)
+                print(
+                    f"Enhanced query ({args.enhance}): '{args.query}' -> '{enhanced_query}'\n"
+                )
+                if enhanced_query.strip() == "":
+                    enhanced_query = args.query
             results = hs.rrf_search(enhanced_query, args.k, args.limit)
 
             for i, result in enumerate(results):
