@@ -1,11 +1,18 @@
 import math
 from pickle import dump, load
+from typing import TypedDict
 
 from load_files import load_movies, load_stopwords
 from nltk.stem import PorterStemmer
 from text_processing import preprocess
 
 from .constants import BM25_B, BM25_K1, DEFAULT_BM25_LIMIT
+
+
+class BM25Result(TypedDict):
+    id: int
+    title: str
+    score: float
 
 
 class InvertedIndex:
@@ -89,7 +96,7 @@ class InvertedIndex:
 
     def bm25_search(
         self, query: str, limit: int = DEFAULT_BM25_LIMIT
-    ) -> list[dict[str, str | float]]:
+    ) -> list[BM25Result]:
         """Return the top k documents for a given query using BM25."""
         tokens = preprocess(query, self.stopwords, self.stemm)
         scores = {}  # doc_id : bm25_score

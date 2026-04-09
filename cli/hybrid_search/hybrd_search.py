@@ -25,28 +25,25 @@ class HybridSearch:
         semantic_score = self.semantic_search.search_chunks(query, limit * 500)
         bm25_norm = normalize([b["score"] for b in bm25])
         semantic_score_norm = normalize([b["score"] for b in semantic_score])
-        doc_map = {doc["id"]: doc for doc in self.documents}
         for i, b in enumerate(bm25):
-            b["normalized_score"] = bm25_norm[i]
+            b["score"] = bm25_norm[i]
 
         for i, s in enumerate(semantic_score):
-            s["normalized_score"] = semantic_score_norm[i]
-
+            s["score"] = semantic_score_norm[i]
         result = []
         combined = {}
         for b in bm25:
-            description = doc_map[b["id"]]["description"]
             combined[b["id"]] = {
-                "bm25_score": b["normalized_score"],
+                "bm25_score": b["score"],
                 "semantic_score": 0.0,
                 "title": b["title"],
-                "description": description,
             }
 
         for s in semantic_score:
             if s["id"] not in combined:
-                combined[s["id"]] = {"bm25_score": 0.0, "text": s["text"]}
-            combined[s["id"]]["semantic_score"] = s["normalized_score"]
+                combined[s["id"]] = {"bm25_score": 0.0}
+            combined[s["id"]]["semantic_score"] = s["score"]
+            combined[s["id"]]["description"] = s["document"]
 
         for _, data in combined.items():
             data["hybrid_score"] = hybrid_score(

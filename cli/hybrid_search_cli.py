@@ -44,7 +44,7 @@ def main() -> None:
                 print(
                     f"  BM25: {result['bm25_score']:.2f}, Semantic: {result['semantic_score']:.2f}"
                 )
-                print(f"  {result['description'][:100]}...")
+                print(f"  {result['description']}...")
         case _:
             parser.print_help()
 
