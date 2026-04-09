@@ -27,6 +27,13 @@ def main() -> None:
         "--limit", type=int, default=5, help="Limit the number of results"
     )
 
+    rrf_search = subparsers.add_parser("rrf-search", help="Perform a RRF search")
+    rrf_search.add_argument("query", type=str, help="Query to search for")
+    rrf_search.add_argument("-k", type=int, default=60, help="K value for the search")
+    rrf_search.add_argument(
+        "--limit", type=int, default=5, help="Limit the number of results"
+    )
+
     args = parser.parse_args()
 
     match args.command:
@@ -43,6 +50,17 @@ def main() -> None:
                 print(f"  Hybrid Score: {result['hybrid_score']:.2f}")
                 print(
                     f"  BM25: {result['bm25_score']:.2f}, Semantic: {result['semantic_score']:.2f}"
+                )
+                print(f"  {result['description']}...")
+        case "rrf-search":
+            documents = load_movies()
+            hs = HybridSearch(documents)
+            results = hs.rrf_search(args.query, args.k, args.limit)
+            for i, result in enumerate(results):
+                print(f"{i + 1}. {result['title']}")
+                print(f"  RRF Score: {result['rrf_score']:.4f}")
+                print(
+                    f"  BM25: {result['bm25_rank']}, Semantic: {result['semantic_rank']}"
                 )
                 print(f"  {result['description']}...")
         case _:
