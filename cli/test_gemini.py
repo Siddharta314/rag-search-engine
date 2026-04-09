@@ -15,5 +15,5 @@ response = client.models.generate_content(
     contents="Why is Boot.dev such a great place to learn about RAG? Use one paragraph maximum.",
 )
 print(response.text)
-print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-print("Response tokens:", response.usage_metadata.candidates_token_count)
+# print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+# print("Response tokens:", response.usage_metadata.candidates_token_count)

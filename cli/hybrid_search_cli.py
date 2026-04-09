@@ -1,6 +1,7 @@
 import argparse
 
 from hybrid_search.hybrd_search import HybridSearch
+from hybrid_search.llm_utils import spell_correct
 from load_files import load_movies
 from math_utils import normalize
 
@@ -33,6 +34,12 @@ def main() -> None:
     rrf_search.add_argument(
         "--limit", type=int, default=5, help="Limit the number of results"
     )
+    rrf_search.add_argument(
+        "--enhance",
+        type=str,
+        choices=["spell"],
+        help="Query enhancement method",
+    )
 
     args = parser.parse_args()
 
@@ -55,7 +62,16 @@ def main() -> None:
         case "rrf-search":
             documents = load_movies()
             hs = HybridSearch(documents)
-            results = hs.rrf_search(args.query, args.k, args.limit)
+            enhanced_query = args.query
+            if args.enhance == "spell":
+                enhanced_query = spell_correct(args.query)
+                if enhanced_query.strip() == "":
+                    enhanced_query = args.query
+                print(
+                    f"Enhanced query ({args.enhance}): '{args.query}' -> '{enhanced_query}'\n"
+                )
+            results = hs.rrf_search(enhanced_query, args.k, args.limit)
+
             for i, result in enumerate(results):
                 print(f"{i + 1}. {result['title']}")
                 print(f"  RRF Score: {result['rrf_score']:.4f}")
