@@ -1,7 +1,7 @@
 import argparse
 
 from hybrid_search.hybrd_search import HybridSearch
-from hybrid_search.llm_utils import rewrite_query, spell_correct
+from hybrid_search.llm_utils import expand_query, rewrite_query, spell_correct
 from load_files import load_movies
 from math_utils import normalize
 
@@ -37,7 +37,7 @@ def main() -> None:
     rrf_search.add_argument(
         "--enhance",
         type=str,
-        choices=["spell", "rewrite"],
+        choices=["spell", "rewrite", "expand"],
         help="Query enhancement method",
     )
 
@@ -67,16 +67,18 @@ def main() -> None:
                 enhanced_query = spell_correct(args.query)
                 if enhanced_query.strip() == "":
                     enhanced_query = args.query
-                print(
-                    f"Enhanced query ({args.enhance}): '{args.query}' -> '{enhanced_query}'\n"
-                )
             elif args.enhance == "rewrite":
                 enhanced_query = rewrite_query(args.query)
+                if enhanced_query.strip() == "":
+                    enhanced_query = args.query
+            elif args.enhance == "expand":
+                enhanced_query = expand_query(args.query)
+                if enhanced_query.strip() == "":
+                    enhanced_query = args.query
+            if args.enhance:
                 print(
                     f"Enhanced query ({args.enhance}): '{args.query}' -> '{enhanced_query}'\n"
                 )
-                if enhanced_query.strip() == "":
-                    enhanced_query = args.query
             results = hs.rrf_search(enhanced_query, args.k, args.limit)
 
             for i, result in enumerate(results):
@@ -85,7 +87,7 @@ def main() -> None:
                 print(
                     f"  BM25: {result['bm25_rank']}, Semantic: {result['semantic_rank']}"
                 )
-                print(f"  {result['description']}...")
+                print(f"  {result['description'][:100]}...")
         case _:
             parser.print_help()
 
