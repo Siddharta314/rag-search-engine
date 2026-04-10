@@ -1,4 +1,5 @@
 import os
+import time
 
 from dotenv import load_dotenv
 from google import genai
@@ -70,3 +71,37 @@ User query: "{query}"
 """,
     )
     return (response.text or "").strip()
+
+
+def rerank_individual(query: str, doc) -> str:
+    response = client.models.generate_content(
+        model="gemma-3-27b-it",
+        contents=f"""Rate how well this movie matches the search query.
+
+Query: "{query}"
+Movie: {doc.get("title", "")} - {doc.get("description", "")}
+
+Consider:
+- Direct relevance to query
+- User intent (what they're looking for)
+- Content appropriateness
+
+Rate 0-10 (10 = perfect match).
+Output ONLY the number in your response, no other text or explanation.
+
+Score:""",
+    )
+    return (response.text or "").strip()
+
+
+def rerank_all_documents_(query: str, documents: list) -> list:
+    results = []
+    for doc in documents:
+        rerank_score = rerank_individual(query, doc)
+        try:
+            rerank_score = int(rerank_score)
+        except ValueError:
+            rerank_score = 0
+        results.append({**doc, "re_rank_score": rerank_score})
+        time.sleep(3)
+    return sorted(results, key=lambda x: x["re_rank_score"], reverse=True)
