@@ -1,46 +1,17 @@
-import argparse
-
+from hybrid_search.commands import create_parser
 from hybrid_search.hybrd_search import HybridSearch
-from hybrid_search.llm_utils import expand_query, rewrite_query, spell_correct
+from hybrid_search.llm_utils import (
+    expand_query,
+    rerank_all_documents_,
+    rewrite_query,
+    spell_correct,
+)
 from load_files import load_movies
 from math_utils import normalize
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Hybrid Search CLI")
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    normalize_subparser = subparsers.add_parser(
-        "normalize", help="Normalize a sequence of numbers"
-    )
-    normalize_subparser.add_argument(
-        "numbers", nargs="+", type=float, help="Numbers to normalize"
-    )
-
-    weighted_search = subparsers.add_parser(
-        "weighted-search", help="Perform a weighted search"
-    )
-    weighted_search.add_argument("query", type=str, help="Query to search for")
-    weighted_search.add_argument(
-        "--alpha", type=float, default=0.5, help="Alpha value for the search"
-    )
-    weighted_search.add_argument(
-        "--limit", type=int, default=5, help="Limit the number of results"
-    )
-
-    rrf_search = subparsers.add_parser("rrf-search", help="Perform a RRF search")
-    rrf_search.add_argument("query", type=str, help="Query to search for")
-    rrf_search.add_argument("-k", type=int, default=60, help="K value for the search")
-    rrf_search.add_argument(
-        "--limit", type=int, default=5, help="Limit the number of results"
-    )
-    rrf_search.add_argument(
-        "--enhance",
-        type=str,
-        choices=["spell", "rewrite", "expand"],
-        help="Query enhancement method",
-    )
-
+    parser = create_parser()
     args = parser.parse_args()
 
     match args.command:
@@ -79,13 +50,31 @@ def main() -> None:
                 print(
                     f"Enhanced query ({args.enhance}): '{args.query}' -> '{enhanced_query}'\n"
                 )
-            results = hs.rrf_search(enhanced_query, args.k, args.limit)
+            limit = args.limit
+            if args.rerank_method == "individual":
+                limit = limit * 5
+            results = hs.rrf_search(enhanced_query, args.k, limit)
 
+            if args.rerank_method == "individual":
+                new_results = rerank_all_documents_(enhanced_query, results)
+                print(f"Re-ranking top {args.limit} results using individual method...")
+                print(
+                    f"Reciprocal Rank Fusion Results for '{enhanced_query}' (k={args.k}):"
+                )
+                for i, result in enumerate(new_results[: args.limit]):
+                    print(f"{i + 1}. {result['title']}")
+                    print(f"Re-rank Score: {result['re_rank_score']:.3f}/10")
+                    print(f"  RRF Score: {result['rrf_score']:.3f}")
+                    print(
+                        f"  BM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}"
+                    )
+                    print(f"  {result['description'][:100]}...")
+                return None
             for i, result in enumerate(results):
                 print(f"{i + 1}. {result['title']}")
-                print(f"  RRF Score: {result['rrf_score']:.4f}")
+                print(f"  RRF Score: {result['rrf_score']:.3f}")
                 print(
-                    f"  BM25: {result['bm25_rank']}, Semantic: {result['semantic_rank']}"
+                    f"  BM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}"
                 )
                 print(f"  {result['description'][:100]}...")
         case _:
