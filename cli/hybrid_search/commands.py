@@ -35,5 +35,7 @@ def create_parser():
         choices=["spell", "rewrite", "expand"],
         help="Query enhancement method",
     )
-    rrf_search.add_argument("--rerank-method", type=str, choices=["individual"])
+    rrf_search.add_argument(
+        "--rerank-method", type=str, choices=["individual", "batch"]
+    )
     return parser

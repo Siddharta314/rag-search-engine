@@ -16,6 +16,7 @@ class WeighetedSearchResult(TypedDict):
 
 
 class RRFResult(TypedDict):
+    id: int
     title: str
     rrf_score: float
     bm25_rank: int
@@ -81,6 +82,7 @@ class HybridSearch:
         docs_to_map = {doc["id"]: doc for doc in self.documents}
         for i, b in enumerate(bm25, start=1):
             combined[b["id"]] = {
+                "id": b["id"],
                 "bm25_rank": i,
                 "semantic_rank": None,
                 "rrf_score": rrf_score(i, k),
@@ -91,6 +93,7 @@ class HybridSearch:
         for i, s in enumerate(semantic_score, start=1):
             if s["id"] not in combined:
                 combined[s["id"]] = {
+                    "id": s["id"],
                     "bm25_rank": None,
                     "title": s["title"],
                     "semantic_rank": None,

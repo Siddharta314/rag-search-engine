@@ -1,8 +1,10 @@
+import json
 import os
 import time
 
 from dotenv import load_dotenv
 from google import genai
+from hybrid_search.hybrd_search import RRFResult
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -73,7 +75,7 @@ User query: "{query}"
     return (response.text or "").strip()
 
 
-def rerank_individual(query: str, doc) -> str:
+def rerank_individual(query: str, doc: RRFResult) -> str:
     response = client.models.generate_content(
         model="gemma-3-27b-it",
         contents=f"""Rate how well this movie matches the search query.
@@ -94,7 +96,33 @@ Score:""",
     return (response.text or "").strip()
 
 
-def rerank_all_documents_(query: str, documents: list) -> list:
+def rerank_in_batch(query: str, docs: list[RRFResult]) -> str:
+    doc_list_str = "\n".join(
+        [
+            f"Movie ID: {doc.get('id', '')} - {doc.get('title', '')} - {doc.get('description', '')}"
+            for doc in docs
+        ]
+    )
+    response = client.models.generate_content(
+        model="gemma-3-27b-it",
+        contents=f"""Rank the movies listed below by relevance to the following search query.
+
+Query: "{query}"
+
+Movies:
+{doc_list_str}
+
+Return ONLY the movie IDs in order of relevance (best match first). Return a valid JSON list, nothing else.
+
+For example:
+[75, 12, 34, 2, 1]
+
+Ranking:""",
+    )
+    return (response.text or "").strip()
+
+
+def rerank_all_documents(query: str, documents: list[RRFResult]) -> list:
     results = []
     for doc in documents:
         rerank_score = rerank_individual(query, doc)
@@ -105,3 +133,13 @@ def rerank_all_documents_(query: str, documents: list) -> list:
         results.append({**doc, "re_rank_score": rerank_score})
         time.sleep(3)
     return sorted(results, key=lambda x: x["re_rank_score"], reverse=True)
+
+
+def rerank_all_documents_batch(query: str, documents: list) -> list:
+    results_ids = json.loads(rerank_in_batch(query, documents)) or []
+    results = []
+    for i, result in enumerate(results_ids):
+        for doc in documents:
+            if doc["id"] == result:
+                results.append({**doc, "re_rank_rank": i + 1})
+    return results
