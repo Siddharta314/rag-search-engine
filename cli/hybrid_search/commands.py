@@ -36,6 +36,6 @@ def create_parser():
         help="Query enhancement method",
     )
     rrf_search.add_argument(
-        "--rerank-method", type=str, choices=["individual", "batch"]
+        "--rerank-method", type=str, choices=["individual", "batch", "cross_encoder"]
     )
     return parser

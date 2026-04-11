@@ -22,6 +22,8 @@ class RRFResult(TypedDict):
     bm25_rank: int
     semantic_rank: int
     description: str
+    re_rank_rank: int | None
+    cross_encoder_score: float | None
 
 
 class HybridSearch:

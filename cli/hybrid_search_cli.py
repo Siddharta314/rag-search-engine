@@ -9,6 +9,7 @@ from hybrid_search.llm_utils import (
 )
 from load_files import load_movies
 from math_utils import normalize
+from sentence_transformers import CrossEncoder
 
 
 def main() -> None:
@@ -52,7 +53,11 @@ def main() -> None:
                     f"Enhanced query ({args.enhance}): '{args.query}' -> '{enhanced_query}'\n"
                 )
             limit = args.limit
-            if args.rerank_method == "individual" or args.rerank_method == "batch":
+            if (
+                args.rerank_method == "individual"
+                or args.rerank_method == "batch"
+                or args.rerank_method == "cross_encoder"
+            ):
                 limit = limit * 5
             results = hs.rrf_search(enhanced_query, args.k, limit)
 
@@ -88,7 +93,39 @@ def main() -> None:
                     print(f"  {result['description'][:100]}...")
                     print()
                 return None
-
+            elif args.rerank_method == "cross_encoder":
+                cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")
+                pairs = [
+                    [
+                        args.query,
+                        f"{doc.get('title', '')} - {doc.get('document', '')}",
+                    ]
+                    for doc in results
+                ]
+                scores = cross_encoder.predict(pairs)
+                for i in range(len(results)):
+                    results[i]["cross_encoder_score"] = scores[i]
+                results = sorted(
+                    results,
+                    key=lambda x: x.get("cross_encoder_score", 0.0) or 0.0,
+                    reverse=True,
+                )
+                print(
+                    f"Re-ranking top {args.limit} results using cross_encoder method..."
+                )
+                print(
+                    f"Reciprocal Rank Fusion Results for '{enhanced_query}' (k={args.k}):"
+                )
+                for i, result in enumerate(results[: args.limit]):
+                    print(f"{i + 1}. {result['title']}")
+                    print(f"  Cross Encoder Score: {result['cross_encoder_score']:.3f}")
+                    print(f"  RRF Score: {result['rrf_score']:.3f}")
+                    print(
+                        f"  BM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}"
+                    )
+                    print(f"  {result['description'][:100]}...")
+                    print()
+                return None
             for i, result in enumerate(results):
                 print(f"{i + 1}. {result['title']}")
                 print(f"  RRF Score: {result['rrf_score']:.3f}")
