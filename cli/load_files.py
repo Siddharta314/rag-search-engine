@@ -1,5 +1,10 @@
 import json
-from typing import Any
+from typing import Any, TypedDict
+
+
+class TestCase(TypedDict):
+    query: str
+    relevant_docs: list[str]
 
 
 def load_movies() -> list[dict[str, Any]]:
@@ -41,3 +46,10 @@ def load_stopwords() -> list[str]:
         stopwords_list = f.read().splitlines()
 
     return stopwords_list
+
+
+def load_golden_dataset() -> list[TestCase]:
+    with open("./data/golden_dataset.json", encoding="utf-8") as f:
+        golden_dataset = json.load(f)
+
+    return golden_dataset.get("test_cases", [])
