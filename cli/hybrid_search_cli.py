@@ -59,7 +59,7 @@ def main() -> None:
                 or args.rerank_method == "cross_encoder"
             ):
                 limit = limit * 5
-            results = hs.rrf_search(enhanced_query, args.k, limit)
+            results = hs.rrf_search(enhanced_query, limit, args.k)
 
             if args.rerank_method == "individual":
                 new_results = rerank_all_documents(enhanced_query, results)
