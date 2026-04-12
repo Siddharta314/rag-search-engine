@@ -29,8 +29,12 @@ def main():
             if relevant_doc in title_results:
                 count += 1
         precision = count / limit
+        recall = count / len(test_relevants)
+        f1 = 2 * (precision * recall) / (precision + recall)
         print(f"- Query: {query}")
         print(f"  - Precision@{limit}: {precision:.4f}")
+        print(f"  - Recall@{limit}: {recall:.4f}")
+        print(f"  - F1 Score: {f1:.4f}")
         print(f"  - Retrieved: {', '.join(result['title'] for result in results)}")
         print(f"  - Relevant: {', '.join(test_relevants)}")
         print()
