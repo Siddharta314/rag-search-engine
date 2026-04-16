@@ -1,15 +1,15 @@
-from hybrid_search.commands import create_parser
+import json
+
+from hybrid_search.commands import create_parser, print_results
 from hybrid_search.hybrd_search import HybridSearch
 from hybrid_search.llm_utils import (
+    evaluate_results,
     expand_query,
-    rerank_all_documents,
-    rerank_all_documents_batch,
     rewrite_query,
     spell_correct,
 )
 from load_files import load_movies
 from math_utils import normalize
-from sentence_transformers import CrossEncoder
 
 
 def main() -> None:
@@ -60,8 +60,23 @@ def main() -> None:
             ):
                 limit = limit * 5
             results = hs.rrf_search(enhanced_query, limit, args.k)
-
             print_results(args, enhanced_query, results)
+            if args.evaluate:
+                try:
+                    json_scores_llm = evaluate_results(enhanced_query, results)
+                    print(json_scores_llm)
+                    llm_evaluation = json.loads(json_scores_llm)
+                except Exception as e:
+                    print(f"Error in the llm evaluation: {e}")
+                    return None
+                if len(llm_evaluation) != len(results):
+                    print("Error in the llm evaluation")
+                    return None
+
+                for i, (result, score) in enumerate(
+                    zip(results, llm_evaluation, strict=False)
+                ):
+                    print(f"{i + 1}. {result['title']}: {score}/3")
 
         case _:
             parser.print_help()
@@ -69,57 +84,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-def print_results(args, enhanced_query, results):
-    if args.rerank_method:
-        print(
-            f"Re-ranking top {args.limit} results using {args.rerank_method} method..."
-        )
-        print(f"Reciprocal Rank Fusion Results for '{enhanced_query}' (k={args.k}):")
-        new_results = []
-        if args.rerank_method == "individual":
-            new_results = rerank_all_documents(enhanced_query, results)
-        elif args.rerank_method == "batch":
-            new_results = rerank_all_documents_batch(enhanced_query, results)
-        elif args.rerank_method == "cross_encoder":
-            cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")
-            pairs = [
-                [
-                    args.query,
-                    f"{doc.get('title', '')} - {doc.get('document', '')}",
-                ]
-                for doc in results
-            ]
-            scores = cross_encoder.predict(pairs)
-            for i in range(len(results)):
-                results[i]["cross_encoder_score"] = scores[i]
-            new_results = sorted(
-                results,
-                key=lambda x: x.get("cross_encoder_score", 0.0) or 0.0,
-                reverse=True,
-            )
-        for i, result in enumerate(new_results[: args.limit]):
-            print(f"{i + 1}. {result['title']}")
-            if args.rerank_method == "individual":
-                print(f"  Re-rank Score: {result['re_rank_score']:.3f}/10")
-            elif args.rerank_method == "batch":
-                print(f"  Re-rank Rank: {result['re_rank_rank']}")
-            elif args.rerank_method == "cross_encoder":
-                print(f"  Cross Encoder Score: {result['cross_encoder_score']:.3f}")
-            print(f"  RRF Score: {result['rrf_score']:.3f}")
-            print(
-                f"  BM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}"
-            )
-            print(f"  {result['description'][:100]}...")
-            print()
-        return None
-
-    for i, result in enumerate(results):
-        print(f"{i + 1}. {result['title']}")
-        print(f"  RRF Score: {result['rrf_score']:.3f}")
-        print(
-            f"  BM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}"
-        )
-        print(f"  {result['description'][:100]}...")
-        print()

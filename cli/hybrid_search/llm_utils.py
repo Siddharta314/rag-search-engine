@@ -12,11 +12,12 @@ if not api_key:
     raise RuntimeError("GEMINI_API_KEY environment variable not set")
 
 client = genai.Client(api_key=api_key)
+MODEL = "gemma-3-27b-it"
 
 
 def spell_correct(query: str) -> str:
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""Fix any spelling errors in the user-provided movie search query below.
 Correct only clear, high-confidence typos. Do not rewrite, add, remove, or reorder words.
 Preserve punctuation and capitalization unless a change is required for a typo fix.
@@ -30,7 +31,7 @@ User query: "{query}"
 
 def rewrite_query(query: str) -> str:
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""Rewrite the user-provided movie search query below to be more specific and searchable.
 
 Consider:
@@ -56,7 +57,7 @@ User query: "{query}"
 
 def expand_query(query: str) -> str:
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""Expand the user-provided movie search query below with related terms.
 
 Add synonyms and related concepts that might appear in movie descriptions.
@@ -77,7 +78,7 @@ User query: "{query}"
 
 def rerank_individual(query: str, doc: RRFResult) -> str:
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""Rate how well this movie matches the search query.
 
 Query: "{query}"
@@ -104,7 +105,7 @@ def rerank_in_batch(query: str, docs: list[RRFResult]) -> str:
         ]
     )
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""Rank the movies listed below by relevance to the following search query.
 
 Query: "{query}"
@@ -147,7 +148,7 @@ def rerank_all_documents_batch(query: str, documents: list) -> list:
 
 def rag_explanation(query: str, docs: str) -> str:
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""You are a RAG agent for Hoopla, a movie streaming service.
 Your task is to provide a natural-language answer to the user's query based on documents retrieved during search.
 Provide a comprehensive answer that addresses the user's query.
@@ -164,7 +165,7 @@ Answer:""",
 
 def rag_summarize(query: str, docs: str) -> str:
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""Provide information useful to the query below by synthesizing data from multiple search results in detail.
 
 The goal is to provide comprehensive information so that users know what their options are.
@@ -184,7 +185,7 @@ Provide a comprehensive 3–4 sentence answer that combines information from mul
 
 def rag_citations(query: str, docs: str) -> str:
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""Answer the query below and give information based on the provided documents.
 
 The answer should be tailored to users of Hoopla, a movie streaming service.
@@ -209,7 +210,7 @@ Answer:""",
 
 def rag_answering_questions(query: str, docs: str) -> str:
     response = client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=MODEL,
         contents=f"""Answer the query below and give information based on the provided documents.
 
 The answer should be tailored to users of Hoopla, a movie streaming service.
@@ -228,5 +229,31 @@ Instructions:
 - Be direct and informative
 
 Answer:""",
+    )
+    return (response.text or "").strip()
+
+
+def evaluate_results(query: str, results: list[RRFResult]) -> str:
+    formated_docs = "\n".join([f"Title :{result['title']}" for result in results])
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=f"""Rate how relevant each result is to this query on a 0-3 scale:
+
+Query: "{query}"
+
+Results:
+{formated_docs}
+
+Scale:
+- 3: Highly relevant
+- 2: Relevant
+- 1: Marginally relevant
+- 0: Not relevant
+
+Do NOT give any numbers other than 0, 1, 2, or 3.
+
+Return ONLY the scores in the same order you were given the documents. Return a valid JSON list, nothing else. For example:
+
+[2, 0, 3, 2, 0, 1]""",
     )
     return (response.text or "").strip()
