@@ -1,7 +1,7 @@
 import argparse
 
 from hybrid_search.hybrd_search import HybridSearch
-from hybrid_search.llm_utils import rag_explanation, rag_summarize
+from hybrid_search.llm_utils import rag_citations, rag_explanation, rag_summarize
 from load_files import load_movies
 
 
@@ -24,6 +24,12 @@ def main():
         help="Limits the number of documents to summarize",
     )
 
+    citation_parser = subparsers.add_parser("citations", help="Generate a citation")
+    citation_parser.add_argument("query", type=str, help="Search query for citation")
+    citation_parser.add_argument(
+        "--limit", type=int, default=5, help="Limits the number of documents to citate"
+    )
+
     documents = load_movies()
     hs = HybridSearch(documents)
     args = parser.parse_args()
@@ -41,6 +47,7 @@ def main():
             print("Search Results:")
             for r in results:
                 print(f"- {r['title']}")
+            print()
             rag_response = rag_explanation(query, docs)
             print("RAG Response:")
             print(rag_response)
@@ -57,9 +64,27 @@ def main():
             print("Search Results:")
             for r in results:
                 print(f"- {r['title']}")
+            print()
             summary = rag_summarize(query, docs)
             print("LLM Summary:")
             print(summary)
+        case "citations":
+            query = args.query
+            limit = args.limit
+            results = hs.rrf_search(query, limit)
+            docs = "\n".join(
+                [
+                    f"Title: {doc.get('title', '')}: {doc.get('description', '')}"
+                    for doc in results
+                ]
+            )
+            print("Search Results:")
+            for r in results:
+                print(f"- {r['title']}")
+            print()
+            citation = rag_citations(query, docs)
+            print("LLM Answer:")
+            print(citation)
         case _:
             parser.print_help()
 
