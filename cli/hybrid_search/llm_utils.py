@@ -145,13 +145,7 @@ def rerank_all_documents_batch(query: str, documents: list) -> list:
     return results
 
 
-def rag_explanation(query: str, docs_list: list[RRFResult]) -> str:
-    docs = "\n".join(
-        [
-            f"Title: {doc.get('title', '')}: {doc.get('description', '')}"
-            for doc in docs_list
-        ]
-    )
+def rag_explanation(query: str, docs: str) -> str:
     response = client.models.generate_content(
         model="gemma-3-27b-it",
         contents=f"""You are a RAG agent for Hoopla, a movie streaming service.
@@ -168,13 +162,7 @@ Answer:""",
     return (response.text or "").strip()
 
 
-def rag_summarize(query: str, docs_list: list[RRFResult]) -> str:
-    docs = "\n".join(
-        [
-            f"Title: {doc.get('title', '')}: {doc.get('description', '')}"
-            for doc in docs_list
-        ]
-    )
+def rag_summarize(query: str, docs: str) -> str:
     response = client.models.generate_content(
         model="gemma-3-27b-it",
         contents=f"""Provide information useful to the query below by synthesizing data from multiple search results in detail.
@@ -190,5 +178,55 @@ Search results:
 {docs}
 
 Provide a comprehensive 3–4 sentence answer that combines information from multiple sources:""",
+    )
+    return (response.text or "").strip()
+
+
+def rag_citations(query: str, docs: str) -> str:
+    response = client.models.generate_content(
+        model="gemma-3-27b-it",
+        contents=f"""Answer the query below and give information based on the provided documents.
+
+The answer should be tailored to users of Hoopla, a movie streaming service.
+If not enough information is available to provide a good answer, say so, but give the best answer possible while citing the sources available.
+
+Query: {query}
+
+Documents:
+{docs}
+
+Instructions:
+- Provide a comprehensive answer that addresses the query
+- Cite sources in the format [1], [2], etc. when referencing information
+- If sources disagree, mention the different viewpoints
+- If the answer isn't in the provided documents, say "I don't have enough information"
+- Be direct and informative
+
+Answer:""",
+    )
+    return (response.text or "").strip()
+
+
+def rag_answering_questions(query: str, docs: str) -> str:
+    response = client.models.generate_content(
+        model="gemma-3-27b-it",
+        contents=f"""Answer the query below and give information based on the provided documents.
+
+The answer should be tailored to users of Hoopla, a movie streaming service.
+If not enough information is available to provide a good answer, say so, but give the best answer possible while citing the sources available.
+
+Query: {query}
+
+Documents:
+{docs}
+
+Instructions:
+- Provide a comprehensive answer that addresses the query
+- Cite sources in the format [1], [2], etc. when referencing information
+- If sources disagree, mention the different viewpoints
+- If the answer isn't in the provided documents, say "I don't have enough information"
+- Be direct and informative
+
+Answer:""",
     )
     return (response.text or "").strip()
