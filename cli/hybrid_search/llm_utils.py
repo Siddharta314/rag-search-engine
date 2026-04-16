@@ -143,3 +143,52 @@ def rerank_all_documents_batch(query: str, documents: list) -> list:
             if doc["id"] == result:
                 results.append({**doc, "re_rank_rank": i + 1})
     return results
+
+
+def rag_explanation(query: str, docs_list: list[RRFResult]) -> str:
+    docs = "\n".join(
+        [
+            f"Title: {doc.get('title', '')}: {doc.get('description', '')}"
+            for doc in docs_list
+        ]
+    )
+    response = client.models.generate_content(
+        model="gemma-3-27b-it",
+        contents=f"""You are a RAG agent for Hoopla, a movie streaming service.
+Your task is to provide a natural-language answer to the user's query based on documents retrieved during search.
+Provide a comprehensive answer that addresses the user's query.
+
+Query: {query}
+
+Documents:
+{docs}
+
+Answer:""",
+    )
+    return (response.text or "").strip()
+
+
+def rag_summarize(query: str, docs_list: list[RRFResult]) -> str:
+    docs = "\n".join(
+        [
+            f"Title: {doc.get('title', '')}: {doc.get('description', '')}"
+            for doc in docs_list
+        ]
+    )
+    response = client.models.generate_content(
+        model="gemma-3-27b-it",
+        contents=f"""Provide information useful to the query below by synthesizing data from multiple search results in detail.
+
+The goal is to provide comprehensive information so that users know what their options are.
+Your response should be information-dense and concise, with several key pieces of information about the genre, plot, etc. of each movie.
+
+This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+Query: {query}
+
+Search results:
+{docs}
+
+Provide a comprehensive 3–4 sentence answer that combines information from multiple sources:""",
+    )
+    return (response.text or "").strip()
