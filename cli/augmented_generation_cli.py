@@ -29,6 +29,13 @@ def main():
     citation_parser.add_argument(
         "--limit", type=int, default=5, help="Limits the number of documents to citate"
     )
+    question_parser = subparsers.add_parser(
+        "question", help="Answer a question with RAG"
+    )
+    question_parser.add_argument("query", type=str, help="Search query for question")
+    question_parser.add_argument(
+        "--limit", type=int, default=5, help="Limits the number of documents to answer"
+    )
 
     documents = load_movies()
     hs = HybridSearch(documents)
@@ -85,6 +92,23 @@ def main():
             citation = rag_citations(query, docs)
             print("LLM Answer:")
             print(citation)
+        case "question":
+            query = args.query
+            limit = args.limit
+            results = hs.rrf_search(query, limit)
+            docs = "\n".join(
+                [
+                    f"Title: {doc.get('title', '')}: {doc.get('description', '')}"
+                    for doc in results
+                ]
+            )
+            print("Search Results:")
+            for r in results:
+                print(f"- {r['title']}")
+            print()
+            answer = rag_explanation(query, docs)
+            print("Answer:")
+            print(answer)
         case _:
             parser.print_help()
 
